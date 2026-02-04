@@ -3,6 +3,7 @@ package com.bendanfund.app.ui.screens
 import android.graphics.Bitmap
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.bendanfund.app.data.remote.EstimatedValueResponse
 import com.bendanfund.app.data.repository.FundRepository
 import com.bendanfund.app.domain.model.Fund
 import com.bendanfund.app.domain.model.FundType
@@ -20,7 +21,8 @@ data class MainUiState(
     val isLoading: Boolean = false,
     val error: String? = null,
     val selectedFund: Fund? = null,
-    val isRefreshing: Boolean = false
+    val isRefreshing: Boolean = false,
+    val lastUpdateTime: Long = 0L
 )
 
 class MainViewModel : ViewModel() {
@@ -32,62 +34,106 @@ class MainViewModel : ViewModel() {
     private var refreshJob: Job? = null
 
     init {
-        loadMockData()
+        loadDefaultFunds()
     }
 
-    private fun loadMockData() {
+    private fun loadDefaultFunds() {
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true)
 
-            delay(500)
-
-            val mockFunds = listOf(
-                Fund(
-                    id = 1,
-                    code = "161039",
-                    name = "富国中证新能源汽车指数",
-                    holdingAmount = 15000.0,
-                    cost = 12000.0,
-                    costPerShare = 1.2,
-                    type = FundType.INDEX,
-                    estimatedValue = 16500.0,
-                    netValue = 1.35
-                ),
-                Fund(
-                    id = 2,
-                    code = "110022",
-                    name = "易方达消费行业股票",
-                    holdingAmount = 25000.0,
-                    cost = 28000.0,
-                    costPerShare = 1.8,
-                    type = FundType.STOCK,
-                    estimatedValue = 26500.0,
-                    netValue = 1.72
-                ),
-                Fund(
-                    id = 3,
-                    code = "162411",
-                    name = "华宝标普油气上游股票",
-                    holdingAmount = 8000.0,
-                    cost = 7500.0,
-                    costPerShare = 0.95,
-                    type = FundType.STOCK,
-                    estimatedValue = 8200.0,
-                    netValue = 1.02
+            try {
+                val defaultFunds = listOf(
+                    Fund(
+                        id = 1,
+                        code = "161039",
+                        name = "富国中证新能源汽车指数",
+                        holdingAmount = 15000.0,
+                        cost = 12000.0,
+                        costPerShare = 1.2,
+                        type = FundType.INDEX,
+                        estimatedValue = 0.0,
+                        netValue = 0.0
+                    ),
+                    Fund(
+                        id = 2,
+                        code = "110022",
+                        name = "易方达消费行业股票",
+                        holdingAmount = 25000.0,
+                        cost = 28000.0,
+                        costPerShare = 1.8,
+                        type = FundType.STOCK,
+                        estimatedValue = 0.0,
+                        netValue = 0.0
+                    ),
+                    Fund(
+                        id = 3,
+                        code = "162411",
+                        name = "华宝标普油气上游股票",
+                        holdingAmount = 8000.0,
+                        cost = 7500.0,
+                        costPerShare = 0.95,
+                        type = FundType.STOCK,
+                        estimatedValue = 0.0,
+                        netValue = 0.0
+                    )
                 )
-            )
 
-            val portfolio = UserPortfolio(
-                name = "我的持仓",
-                funds = mockFunds,
-                totalCost = mockFunds.sumOf { it.cost },
-                totalEstimatedValue = mockFunds.sumOf { it.estimatedValue }
-            )
+                val portfolio = UserPortfolio(
+                    name = "我的持仓",
+                    funds = defaultFunds,
+                    totalCost = defaultFunds.sumOf { it.cost },
+                    totalEstimatedValue = 0.0
+                )
 
-            _uiState.value = MainUiState(
-                portfolio = portfolio,
-                isLoading = false
-            )
+                _uiState.value = MainUiState(
+                    portfolio = portfolio,
+                    isLoading = false
+                )
+
+                refreshEstimates()
+            } catch (e: Exception) {
+                _uiState.value = _uiState.value.copy(
+                    isLoading = false,
+                    error = "初始化失败: ${e.message}"
+                )
+            }
+        }
+    }
+
+    fun refreshEstimates() {
+        refreshJob?.cancel()
+        refreshJob = viewModelScope.launch {
+            val currentPortfolio = _uiState.value.portfolio ?: return@launch
+
+            _uiState.value = _uiState.value.copy(isRefreshing = true, error = null)
+
+            try {
+                val fundCodes = currentPortfolio.funds.map { it.code }
+                val result = repository.getBatchEstimates(fundCodes)
+
+                result.fold(
+                    onSuccess = { estimates ->
+                        val updatedPortfolio = repository.calculatePortfolioEstimates(currentPortfolio, estimates)
+
+                        _uiState.value = _uiState.value.copy(
+                            portfolio = updatedPortfolio,
+                            isRefreshing = false,
+                            lastUpdateTime = System.currentTimeMillis()
+                        )
+                    },
+                    onFailure = { error ->
+                        _uiState.value = _uiState.value.copy(
+                            isRefreshing = false,
+                            error = "更新失败: ${error.message}"
+                        )
+                    }
+                )
+            } catch (e: Exception) {
+                _uiState.value = _uiState.value.copy(
+                    isRefreshing = false,
+                    error = "网络错误: ${e.message}"
+                )
+            }
         }
     }
 
@@ -109,26 +155,10 @@ class MainViewModel : ViewModel() {
                         cost = 9500.0,
                         costPerShare = 1.0,
                         type = FundType.STOCK,
-                        estimatedValue = 10200.0
+                        estimatedValue = 0.0
                     )
 
-                    val currentPortfolio = _uiState.value.portfolio
-                    val updatedFunds = if (currentPortfolio != null) {
-                        currentPortfolio.funds + newFund
-                    } else {
-                        listOf(newFund)
-                    }
-
-                    val updatedPortfolio = UserPortfolio(
-                        funds = updatedFunds,
-                        totalCost = updatedFunds.sumOf { it.cost },
-                        totalEstimatedValue = updatedFunds.sumOf { it.estimatedValue }
-                    )
-
-                    _uiState.value = _uiState.value.copy(
-                        portfolio = updatedPortfolio,
-                        isLoading = false
-                    )
+                    addFundToPortfolio(newFund)
                 } else {
                     val currentPortfolio = _uiState.value.portfolio
                     val updatedFunds = if (currentPortfolio != null) {
@@ -140,13 +170,15 @@ class MainViewModel : ViewModel() {
                     val updatedPortfolio = UserPortfolio(
                         funds = updatedFunds,
                         totalCost = updatedFunds.sumOf { it.cost },
-                        totalEstimatedValue = updatedFunds.sumOf { it.estimatedValue }
+                        totalEstimatedValue = 0.0
                     )
 
                     _uiState.value = _uiState.value.copy(
                         portfolio = updatedPortfolio,
                         isLoading = false
                     )
+
+                    refreshEstimates()
                 }
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(
@@ -157,34 +189,26 @@ class MainViewModel : ViewModel() {
         }
     }
 
-    fun refreshEstimates() {
-        refreshJob?.cancel()
-        refreshJob = viewModelScope.launch {
-            _uiState.value = _uiState.value.copy(isRefreshing = true)
-
-            delay(2000)
-
-            val currentPortfolio = _uiState.value.portfolio ?: return@launch
-
-            val updatedFunds = currentPortfolio.funds.map { fund ->
-                val variation = (Math.random() - 0.5) * 100
-                fund.copy(
-                    estimatedValue = fund.estimatedValue + variation,
-                    lastUpdateTime = System.currentTimeMillis()
-                )
-            }
-
-            val updatedPortfolio = currentPortfolio.copy(
-                funds = updatedFunds,
-                totalEstimatedValue = updatedFunds.sumOf { it.estimatedValue },
-                lastUpdateTime = System.currentTimeMillis()
-            )
-
-            _uiState.value = _uiState.value.copy(
-                portfolio = updatedPortfolio,
-                isRefreshing = false
-            )
+    private fun addFundToPortfolio(fund: Fund) {
+        val currentPortfolio = _uiState.value.portfolio
+        val updatedFunds = if (currentPortfolio != null) {
+            currentPortfolio.funds + fund
+        } else {
+            listOf(fund)
         }
+
+        val updatedPortfolio = UserPortfolio(
+            funds = updatedFunds,
+            totalCost = updatedFunds.sumOf { it.cost },
+            totalEstimatedValue = 0.0
+        )
+
+        _uiState.value = _uiState.value.copy(
+            portfolio = updatedPortfolio,
+            isLoading = false
+        )
+
+        refreshEstimates()
     }
 
     fun selectFund(fund: Fund) {
@@ -193,6 +217,10 @@ class MainViewModel : ViewModel() {
 
     fun clearSelectedFund() {
         _uiState.value = _uiState.value.copy(selectedFund = null)
+    }
+
+    fun clearError() {
+        _uiState.value = _uiState.value.copy(error = null)
     }
 
     fun addManualFund(
@@ -210,23 +238,10 @@ class MainViewModel : ViewModel() {
                 cost = cost,
                 costPerShare = if (holdingAmount > 0) cost / holdingAmount else 0.0,
                 type = FundType.STOCK,
-                estimatedValue = holdingAmount * 1.02
+                estimatedValue = 0.0
             )
 
-            val currentPortfolio = _uiState.value.portfolio
-            val updatedFunds = if (currentPortfolio != null) {
-                currentPortfolio.funds + newFund
-            } else {
-                listOf(newFund)
-            }
-
-            val updatedPortfolio = UserPortfolio(
-                funds = updatedFunds,
-                totalCost = updatedFunds.sumOf { it.cost },
-                totalEstimatedValue = updatedFunds.sumOf { it.estimatedValue }
-            )
-
-            _uiState.value = _uiState.value.copy(portfolio = updatedPortfolio)
+            addFundToPortfolio(newFund)
         }
     }
 

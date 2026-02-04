@@ -5,23 +5,15 @@ import retrofit2.http.Query
 
 interface FundApiService {
 
-    @GET("fund/detail")
-    suspend fun getFundDetail(
-        @Query("fund_code") fundCode: String
-    ): ApiResponse<FundDetailResponse>
-
-    @GET("fund/estimate")
+    @GET("js")
     suspend fun getFundEstimate(
-        @Query("fund_code") fundCode: String
-    ): ApiResponse<EstimatedValueResponse>
+        @Query("fundCode") fundCode: String,
+        @Query("type") type: String = "gz"
+    ): String
 
-    @GET("fund/position")
-    suspend fun getFundPosition(
-        @Query("fund_code") fundCode: String
-    ): ApiResponse<FundPositionResponse>
-
-    @GET("fund/batch-estimate")
+    @GET("js")
     suspend fun getBatchEstimate(
-        @Query("fund_codes") fundCodes: String
-    ): ApiResponse<List<EstimatedValueResponse>>
+        @Query("fundCodes") fundCodes: String,
+        @Query("type") type: String = "gz"
+    ): List<String>
 }

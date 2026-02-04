@@ -57,3 +57,37 @@ data class EstimatedValueResponse(
     @SerializedName("update_time")
     val updateTime: String
 )
+
+data class SinaFundData(
+    @SerializedName("fundcode")
+    val fundCode: String,
+    @SerializedName("name")
+    val fundName: String,
+    @SerializedName("jzrq")
+    val netValueDate: String,
+    @SerializedName("dwjz")
+    val netValue: Double,
+    @SerializedName("gsz")
+    val estimatedValue: Double,
+    @SerializedName("gszzl")
+    val estimatedChangeRate: Double,
+    @SerializedName("gztime")
+    val updateTime: String
+)
+
+data class EastMoneyFundData(
+    @SerializedName("FCODE")
+    val fundCode: String,
+    @SerializedName("SHORTNAME")
+    val fundName: String,
+    @SerializedName("NAV")
+    val netValue: Double,
+    @SerializedName("ACCNAV")
+    val accNetValue: Double,
+    @SerializedName("GSZ")
+    val estimatedValue: Double,
+    @SerializedName("GSZZL")
+    val estimatedChangeRate: Double,
+    @SerializedName("GZTIME")
+    val updateTime: String
+)
