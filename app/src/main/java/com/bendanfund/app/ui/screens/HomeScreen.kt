@@ -23,6 +23,7 @@ import com.bendanfund.app.ui.components.PortfolioSummaryCard
 import com.bendanfund.app.ui.components.SectionHeader
 import com.bendanfund.app.ui.theme.BackgroundLight
 import com.bendanfund.app.ui.theme.Green500
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
