@@ -5,17 +5,16 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.bendanfund.app.ui.screens.HomeScreen
 import com.bendanfund.app.ui.screens.MainViewModel
 import com.bendanfund.app.ui.screens.UploadScreen
 import com.bendanfund.app.ui.theme.BenDanFundTheme
+import com.bendanfund.app.ui.theme.BackgroundLight
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -25,7 +24,7 @@ class MainActivity : ComponentActivity() {
             BenDanFundTheme {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
-                    color = Color(0xFFF5F5F5)
+                    color = BackgroundLight
                 ) {
                     BenDanFundApp()
                 }

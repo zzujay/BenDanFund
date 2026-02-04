@@ -12,7 +12,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -25,11 +24,10 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.bendanfund.app.ui.theme.BackgroundLight
 import com.bendanfund.app.ui.theme.Green500
-import com.bendanfund.app.utils.OcrProcessor
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -88,9 +86,10 @@ fun UploadScreen(
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(
-                            imageVector = Icons.Default.Add,
+                            imageVector = Icons.Default.CameraAlt,
                             contentDescription = "返回",
-                            modifier = Modifier.rotate(45f)
+                            modifier = Modifier.rotate(180f),
+                            tint = Color.White
                         )
                     }
                 },
@@ -107,7 +106,7 @@ fun UploadScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .background(Color(0xFFF5F5F5))
+                .background(BackgroundLight)
                 .padding(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {

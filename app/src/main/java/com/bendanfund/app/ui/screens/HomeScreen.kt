@@ -21,9 +21,8 @@ import com.bendanfund.app.ui.components.FundCard
 import com.bendanfund.app.ui.components.LoadingView
 import com.bendanfund.app.ui.components.PortfolioSummaryCard
 import com.bendanfund.app.ui.components.SectionHeader
+import com.bendanfund.app.ui.theme.BackgroundLight
 import com.bendanfund.app.ui.theme.Green500
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -92,7 +91,7 @@ fun HomeScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .background(Color(0xFFF5F5F5))
+                .background(BackgroundLight)
         ) {
             when {
                 isLoading -> LoadingView()
