@@ -66,18 +66,23 @@ cd BenDanFund
 
 ## API配置
 
-项目默认使用模拟数据。如需接入真实基金API，请在 `data/remote/RetrofitClient.kt` 中修改BASE_URL：
+项目使用**新浪基金API**获取实时估值数据：
+
+- **接口**: `https://fundgz.1234567.com.cn/js/{fundcode}.js`
+- **数据**: 基金净值估算、涨跌幅、更新时间
+- **格式**: JSONP返回，GSON解析
 
 ```kotlin
-private const val BASE_URL = "https://your-api-domain.com/"
+// data/remote/RetrofitClient.kt
+private const val BASE_URL = "https://fundgz.1234567.com.cn/"
 ```
 
 ## 后续优化方向
 
-1. 接入真实基金API获取实时净值
+1. ✅ 已接入真实基金API获取实时净值
 2. 优化OCR识别准确率
 3. 支持更多平台截图识别
-4. 增加数据持久化
+4. 增加数据持久化 (Room)
 5. 完善错误处理
 
 ## 许可证
