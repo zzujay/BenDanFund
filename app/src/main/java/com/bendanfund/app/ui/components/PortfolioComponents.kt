@@ -109,6 +109,7 @@ fun EmptyStateView(
     Column(
         modifier = modifier
             .fillMaxSize()
+            .background(Color(0xFFF5F5F5))
             .padding(32.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
@@ -147,7 +148,9 @@ fun LoadingView(
     modifier: Modifier = Modifier
 ) {
     Box(
-        modifier = modifier.fillMaxSize(),
+        modifier = modifier
+            .fillMaxSize()
+            .background(Color(0xFFF5F5F5)),
         contentAlignment = Alignment.Center
     ) {
         CircularProgressIndicator(color = Green500)
