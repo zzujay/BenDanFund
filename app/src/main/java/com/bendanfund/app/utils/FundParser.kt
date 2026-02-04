@@ -2,14 +2,18 @@ package com.bendanfund.app.utils
 
 import com.bendanfund.app.domain.model.Fund
 import com.bendanfund.app.domain.model.FundType
-import java.text.SimpleDateFormat
-import java.util.Locale
 import java.util.regex.Pattern
+
+data class HoldingInfo(
+    val name: String,
+    val holdingAmount: Double,
+    val cost: Double,
+    val costPerShare: Double
+)
 
 object FundParser {
     private val fundCodePattern = Pattern.compile("(\\d{6})")
     private val amountPattern = Pattern.compile("([\\d,]+\\.?\\d*)\\s*(?:元|万)?")
-    private val datePattern = Pattern.compile("(\\d{4}[-/]\\d{2}[-/]\\d{2})")
 
     fun parseAlipayFundScreenshot(text: String): List<Fund> {
         val funds = mutableListOf<Fund>()
@@ -19,17 +23,16 @@ object FundParser {
         while (i < lines.size) {
             val line = lines[i]
             val fundCode = extractFundCode(line)
-            val fundName = extractFundName(line, funds)
 
             if (fundCode != null) {
                 val holdingInfo = extractHoldingInfo(lines, i)
                 if (holdingInfo != null) {
                     val fund = Fund(
                         code = fundCode,
-                        name = holdingInfo.first,
-                        holdingAmount = holdingInfo.second.first,
-                        cost = holdingInfo.second.second,
-                        costPerShare = holdingInfo.second.third,
+                        name = holdingInfo.name,
+                        holdingAmount = holdingInfo.holdingAmount,
+                        cost = holdingInfo.cost,
+                        costPerShare = holdingInfo.costPerShare,
                         type = determineFundType(fundCode)
                     )
                     funds.add(fund)
@@ -48,7 +51,7 @@ object FundParser {
         } else null
     }
 
-    private fun extractFundName(line: String, existingFunds: List<Fund>): String {
+    private fun extractFundName(line: String): String {
         val parts = line.split("\\s+".toRegex())
         return parts.firstOrNull { it.length in 2..10 && !it.matches(Regex("\\d+")) }
             ?: ""
@@ -57,10 +60,12 @@ object FundParser {
     private fun extractHoldingInfo(
         lines: List<String>,
         startIndex: Int
-    ): Pair<String, Pair<Double, Double, Double>>? {
+    ): HoldingInfo? {
         if (startIndex + 1 >= lines.size) return null
 
+        val currentLine = lines[startIndex]
         val nextLine = lines[startIndex + 1]
+        val fundName = extractFundName(currentLine)
         val amountMatcher = amountPattern.matcher(nextLine)
 
         if (amountMatcher.find()) {
@@ -69,8 +74,13 @@ object FundParser {
                 amountMatcher.group(1)?.replace(",", "")?.toDoubleOrNull() ?: 0.0
             } else 0.0
 
-            val costPerShare = if (costStr > 0) costStr / amountStr else 0.0
-            return Pair("", Pair(amountStr, costStr, costPerShare))
+            val costPerShare = if (amountStr > 0) costStr / amountStr else 0.0
+            return HoldingInfo(
+                name = fundName,
+                holdingAmount = amountStr,
+                cost = costStr,
+                costPerShare = costPerShare
+            )
         }
         return null
     }

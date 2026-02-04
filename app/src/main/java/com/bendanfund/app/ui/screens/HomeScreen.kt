@@ -22,7 +22,10 @@ import com.bendanfund.app.ui.components.LoadingView
 import com.bendanfund.app.ui.components.PortfolioSummaryCard
 import com.bendanfund.app.ui.components.SectionHeader
 import com.bendanfund.app.ui.theme.Green500
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -35,6 +38,7 @@ fun HomeScreen(
     modifier: Modifier = Modifier
 ) {
     var isRefreshing by remember { mutableStateOf(false) }
+    val scope = rememberCoroutineScope()
 
     Scaffold(
         topBar = {
@@ -51,7 +55,7 @@ fun HomeScreen(
                         onClick = {
                             isRefreshing = true
                             onRefresh()
-                            kotlinx.coroutines.MainScope().launch {
+                            scope.launch {
                                 delay(1000)
                                 isRefreshing = false
                             }
@@ -136,7 +140,3 @@ fun HomeScreen(
         }
     }
 }
-
-private fun kotlinx.coroutines.MainScope() = kotlinx.coroutines.CoroutineScope(
-    kotlinx.coroutines.Dispatchers.Main
-)
